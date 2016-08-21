@@ -23,12 +23,12 @@ def main():
     insar = parser.Parser("./data/sample.log")
     print(("SAR file date: %s" % (insar.get_filedate())))
     print("Paging Content:\n")
-    pprint.pprint(insar.get_sar_info()['cpu'])
+    pprint.pprint(insar.get_sar_info()['net'])
 
-def plot_cpu_and_paging():
-    insar = parser.Parser("/Users/mpathira/PhD/Experiments/sar-viz/2331/j-004.txt")
+def plot_cpu_and_paging(sar_log,out_pdf):
+    insar = parser.Parser(sar_log)
     p = plot.Plot(insar.get_sar_info())
-    p.plot()
+    p.plot(out_pdf)
 
 def set_include_path():
     include_path = os.path.abspath("./")
@@ -37,4 +37,5 @@ def set_include_path():
 
 if __name__ == "__main__":
     set_include_path()
-    plot_cpu_and_paging()
+    main()
+    #plot_cpu_and_paging(sys.argv[1], sys.argv[2])

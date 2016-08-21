@@ -16,6 +16,9 @@ PART_IO = 3
 """Paging stats of SAR file"""
 PART_PAGING = 4
 
+"""Network usage part of SAR file"""
+PART_NET = 5
+
 """CPU regexp pattern for detecting SAR section header"""
 PATTERN_CPU = ".*CPU.*(usr|user).*nice.*sys.*"
 
@@ -87,6 +90,21 @@ FIELD_PAIRS_PAGING = {
     'pgpgin': FIELDS_PAGING[0], 'pgpgout': FIELDS_PAGING[1], 'fault': FIELDS_PAGING[2],
     'majflt': FIELDS_PAGING[3], 'pgfree': FIELDS_PAGING[4], 'pgscank': FIELDS_PAGING[5],
     'pgscand': FIELDS_PAGING[6], 'pgsteal': FIELDS_PAGING[7], 'vmeff': FIELDS_PAGING[8]
+}
+
+"""Network usage regexp pattern for detecting SAR section header"""
+PATTERN_NET = ".*IFACE.*rxpck\/s.*txpck\/s.*rxkB\/s.*txkB\/s.*rxcmp\/s.*txcmp\/s.*rxmcst\/s.*"
+
+"""Regexp terms for finding fields in SAR parts for paging statistics"""
+FIELDS_NET = [
+    '^IFACE', '^rxpck\/s', '^txpck\/s', '^rxkB\/s', '^txkB\/s', '^rxcmp\/s', 'txcmp\/s', 'rxmcst\/s'
+]
+
+"""Pair regexp terms with field names in paging status output dictionary"""
+FIELD_PAIRS_NET = {
+    'iface': FIELDS_NET[0], 'rxpck': FIELDS_NET[1], 'txpck': FIELDS_NET[2], 
+    'rxkB': FIELDS_NET[3], 'txkB': FIELDS_NET[4], 'rxcmp': FIELDS_NET[5], 
+    'txcmp': FIELDS_NET[6], 'rxmcst': FIELDS_NET[7]
 }
 
 """Restart time regexp pattern for detecting SAR restart notices"""

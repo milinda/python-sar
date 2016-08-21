@@ -6,10 +6,11 @@
    Parses SAR ASCII output only, not binary files!
 '''
 
-from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PAGING, \
-    PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_PAGING, PATTERN_RESTART, \
+from sar import PART_CPU, PART_MEM, PART_SWP, PART_IO, PART_PAGING, PART_NET, \
+    PATTERN_CPU, PATTERN_MEM, PATTERN_SWP, PATTERN_IO, PATTERN_PAGING, PATTERN_NET, PATTERN_RESTART, \
     FIELDS_CPU, FIELD_PAIRS_CPU, FIELDS_MEM, FIELD_PAIRS_MEM, FIELDS_SWP, \
-    FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAGING, FIELD_PAIRS_PAGING
+    FIELD_PAIRS_SWP, FIELDS_IO, FIELD_PAIRS_IO, FIELDS_PAGING, FIELD_PAIRS_PAGING, \
+    FIELDS_NET, FIELD_PAIRS_NET
 import mmap
 import os
 import re
@@ -48,6 +49,8 @@ class Parser(object):
         '''I/O usage indexes'''
         self.__paging_fields = None
         '''OS Paging indexes'''
+        self.__net_fields = None
+        '''Network usage indexes'''
 
         return None
 
@@ -64,7 +67,7 @@ class Parser(object):
         if (searchunks):
 
             # And then we parse pieces into meaningful data
-            cpu_usage, mem_usage, swp_usage, io_usage, paging_stats = \
+            cpu_usage, mem_usage, swp_usage, io_usage, paging_stats, net_usage = \
                 self._parse_file(searchunks)
 
             if (cpu_usage is False):
@@ -75,13 +78,15 @@ class Parser(object):
                 "mem": mem_usage,
                 "swap": swp_usage,
                 "io": io_usage,
-                "paging": paging_stats
+                "paging": paging_stats,
+                "net": net_usage
             }
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
             del(io_usage)
             del(paging_stats)
+            del(net_usage)
 
             return True
 
@@ -252,6 +257,7 @@ class Parser(object):
         swp_usage = ''
         io_usage = ''
         paging_stats = ''
+        net_usage = ''
 
         # If sar_parts is a list
         if (type(sar_parts) is ListType):
@@ -262,6 +268,7 @@ class Parser(object):
             swp_pattern = re.compile(PATTERN_SWP)
             io_pattern = re.compile(PATTERN_IO)
             paging_pattern = re.compile(PATTERN_PAGING)
+            net_pattern = re.compile(PATTERN_NET)
             restart_pattern = re.compile(PATTERN_RESTART)
 
             ''' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! '''
@@ -330,9 +337,8 @@ class Parser(object):
                     else:
                         io_usage += "\n" + part
 
-                # Try to match paging stats SAR file secitons
+                # Try to match paging stats SAR file sections
                 if (paging_pattern.search(part)):
-                    logging.debug('Matched paging statistics header')
                     if (paging_stats == ''):
                         paging_stats = part
                         try:
@@ -344,6 +350,20 @@ class Parser(object):
                             self.__find_column(FIELDS_PAGING, first_line)
                     else:
                         paging_stats += "\n" + part
+
+                # Try to match network usage SAR file sections
+                if (net_pattern.search(part)):
+                    if (net_usage == ''):
+                        net_usage = part
+                        try:
+                            first_line = part.split("\n")[0]
+                        except IndexError:
+                            first_line = part
+
+                        self.__net_fields = \
+                        self.__find_column(FIELDS_NET, first_line)
+                    else:
+                        net_usage += "\n" + part
 
                 # Try to match restart time
                 if (restart_pattern.search(part)):
@@ -359,17 +379,19 @@ class Parser(object):
             mem_output = self.__split_info(mem_usage, PART_MEM)
             swp_output = self.__split_info(swp_usage, PART_SWP)
             io_output = self.__split_info(io_usage, PART_IO)
-            paging_output = self.__split_info(paging_stats, PART_PAGING) 
+            paging_output = self.__split_info(paging_stats, PART_PAGING)
+            net_output = self.__split_info(net_usage, PART_NET) 
 
             del(cpu_usage)
             del(mem_usage)
             del(swp_usage)
             del(io_usage)
             del(paging_stats)
+            del(net_usage)
 
-            return (cpu_output, mem_output, swp_output, io_output, paging_output)
+            return (cpu_output, mem_output, swp_output, io_output, paging_output, net_output)
 
-        return (False, False, False, False, False)
+        return (False, False, False, False, False, False)
 
     def __find_column(self, column_names, part_first_line):
         '''
@@ -429,6 +451,8 @@ class Parser(object):
             pattern = PATTERN_IO
         elif (part_type == PART_PAGING):
             pattern = PATTERN_PAGING
+        elif (part_type == PART_NET):
+            pattern = PATTERN_NET
 
         if (pattern == ''):
             return False
@@ -506,6 +530,9 @@ class Parser(object):
                     elif part_type == PART_PAGING:
                         fields = self.__paging_fields
                         pairs = FIELD_PAIRS_PAGING
+                    elif part_type == PART_NET:
+                        fields = self.__net_fields
+                        pairs = FIELD_PAIRS_NET
 
                     for sectionname in pairs.iterkeys():
 
@@ -518,6 +545,8 @@ class Parser(object):
                                 sectionname == 'swapfree' or \
                                 sectionname == 'swapused':
                             value = int(value)
+                        elif sectionname == 'iface':
+                            value = str(value)
                         else:
                             value = float(value)
 
@@ -529,6 +558,15 @@ class Parser(object):
                             except KeyError:
                                 return_dict[full_time][cpuid] = {}
                             return_dict[full_time][cpuid][sectionname] = \
+                                value
+                        elif part_type == PART_NET:
+                            iface = elems[(1 if is_24hr is True else 2)]
+                            try:
+                                blah = return_dict[full_time][iface]
+                                del(blah)
+                            except KeyError:
+                                return_dict[full_time][iface] = {}
+                            return_dict[full_time][iface][sectionname] = \
                                 value
                         else:
                             return_dict[full_time][sectionname] = value

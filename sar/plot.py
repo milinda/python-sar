@@ -11,13 +11,16 @@ import matplotlib.ticker as ticker
 
 class Plot(object):
     def __init__(self, sar_info):
+        if not isinstance(sar_info, dict):
+            raise 'Invalid sar info'
         self.sar_info = sar_info
 
-    def plot(self, config={}):
+    def plot(self, out_pdf, config={}):
         fig = plt.figure()
+        fig.set_figheight(10)
         plt.clf()
         plt.subplots_adjust(wspace=1,hspace=1)
-        ax = plt.subplot(211)
+        ax = plt.subplot(311)
         cpu_usage = self.sar_info['cpu']
         time_points = cpu_usage.keys()
 
@@ -38,10 +41,11 @@ class Plot(object):
         ax.xaxis.set_ticks(np.arange(start, end, stepsize))
         plt.xlabel('time')
         plt.ylabel('%')
+        plt.title('CPU Usage')
         lg = plt.legend()
         lg.get_frame().set_alpha(0.5)
 
-        ax = plt.subplot(212)
+        ax = plt.subplot(312)
         paging = self.sar_info['paging']
         time_points = paging.keys()
         fault = [paging[t]['fault'] for t in time_points]
@@ -59,16 +63,27 @@ class Plot(object):
         plt.xticks(x, time_points, rotation='vertical')
         plt.plot(x, fault, label='fault')
         plt.plot(x, majfault, label='majfault')
+        start, end = ax.get_xlim()
+        ax.xaxis.set_ticks(np.arange(start, end, stepsize))
+        plt.xlabel('time')
+        plt.ylabel('faults/s')
+        plt.title('Page Faults')
+        lg = plt.legend()
+        lg.get_frame().set_alpha(0.5)
+
+        ax = plt.subplot(313)
+        plt.xticks(x, time_points, rotation='vertical')
         plt.plot(x, pageins, label='page-ins')
         plt.plot(x, pageouts, label='page-outs')
         start, end = ax.get_xlim()
         ax.xaxis.set_ticks(np.arange(start, end, stepsize))
         plt.xlabel('time')
-        plt.ylabel('count')
+        plt.ylabel('KB/s')
+        plt.title('Page Ins and Outs')
         lg = plt.legend()
         lg.get_frame().set_alpha(0.5)
 
         fig.tight_layout()
-        pp = PdfPages('test.pdf')
+        pp = PdfPages(out_pdf)
         pp.savefig()
         pp.close()
