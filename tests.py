@@ -8,7 +8,7 @@ import sys
 import pprint
 import logging
 import re
-from sar import parser
+from sar import parser, plot
 from sar import PATTERN_PAGING
 
 def validate_regex():
@@ -23,7 +23,12 @@ def main():
     insar = parser.Parser("./data/sample.log")
     print(("SAR file date: %s" % (insar.get_filedate())))
     print("Paging Content:\n")
-    pprint.pprint(insar.get_sar_info()['paging'])
+    pprint.pprint(insar.get_sar_info()['cpu'])
+
+def plot_cpu_and_paging():
+    insar = parser.Parser("/Users/mpathira/PhD/Experiments/sar-viz/2331/j-004.txt")
+    p = plot.Plot(insar.get_sar_info())
+    p.plot()
 
 def set_include_path():
     include_path = os.path.abspath("./")
@@ -32,4 +37,4 @@ def set_include_path():
 
 if __name__ == "__main__":
     set_include_path()
-    main()
+    plot_cpu_and_paging()
