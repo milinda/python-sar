@@ -43,7 +43,7 @@ class Plot(object):
         xticks = np.arange(0, len(time_points), stepsize)
         xticklabels = [time_points[i] for i in xticks]
         
-        ax = plt.subplot(611)
+        ax = plt.subplot(711)
         usr = [cpu_usage[t]['all']['usr'] for t in time_points]
         sys = [cpu_usage[t]['all']['sys'] for t in time_points]
         # plt.plot(time_points, usr, 'm^', time_points, sys, 'm-')
@@ -59,7 +59,7 @@ class Plot(object):
         lg_txts = lg.get_texts()
         plt.setp(lg_txts, fontsize=10)
 
-        ax = plt.subplot(612)
+        ax = plt.subplot(712)
         paging = self.sar_info['paging']
         fault = [paging[t]['fault'] for t in time_points]
         majfault = [paging[t]['majflt'] for t in time_points]
@@ -76,7 +76,7 @@ class Plot(object):
         lg_txts = lg.get_texts()
         plt.setp(lg_txts, fontsize=10)
 
-        ax = plt.subplot(613)
+        ax = plt.subplot(713)
         plt.xticks(xticks, xticklabels, rotation='vertical')
         plt.plot(x, pageins, label='page-ins')
         plt.plot(x, pageouts, label='page-outs')
@@ -89,7 +89,7 @@ class Plot(object):
         plt.setp(lg_txts, fontsize=10)
 
 
-        ax = plt.subplot(614)
+        ax = plt.subplot(714)
         mem = self.sar_info['mem']
         memusage = [mem[t]['memusedpercent'] for t in time_points]
         kbmemused = [(mem[t]['memused'] - (mem[t]['membuffer'] + mem[t]['memcache']))/ 1024 for t in time_points]
@@ -105,7 +105,7 @@ class Plot(object):
         lg_txts = lg.get_texts()
         plt.setp(lg_txts, fontsize=10)
 
-        ax = plt.subplot(615)
+        ax = plt.subplot(715)
         plt.xticks(xticks, xticklabels, rotation='vertical')
         plt.stackplot(x, kbmembuffer, kbmemcached, kbmemused)
         plt.xlabel('time')
@@ -114,7 +114,7 @@ class Plot(object):
         #lg = plt.legend()
         #lg.get_frame().set_alpha(0.5)
 
-        ax = plt.subplot(616)
+        ax = plt.subplot(716)
         net = self.sar_info['net']
         netusage_rx = {}
         netusage_tx = {}
@@ -145,6 +145,21 @@ class Plot(object):
         lg = plt.legend(loc=1,
            ncol=len(netusage_tx.keys()),frameon=False)
         lg.get_frame().set_alpha(0)
+        lg_txts = lg.get_texts()
+        plt.setp(lg_txts, fontsize=10)
+
+        ax = plt.subplot(717)
+        io = self.sar_info['io']
+        bread = [io[t]['bread'] for t in time_points]
+        bwrite = [io[t]['bwrite'] for t in time_points]
+        plt.xticks(xticks, xticklabels, rotation='vertical')
+        plt.plot(x, bread, label='reads')
+        plt.plot(x, bwrite, label='writes')
+        plt.xlabel('time')
+        plt.ylabel('blocks')
+        plt.title('Disk IO')
+        lg = plt.legend(frameon=False)
+        lg.get_frame().set_alpha(0.5)
         lg_txts = lg.get_texts()
         plt.setp(lg_txts, fontsize=10)
 

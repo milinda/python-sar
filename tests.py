@@ -23,7 +23,7 @@ def main():
     insar = parser.Parser("./data/sample.log")
     print(("SAR file date: %s" % (insar.get_filedate())))
     print("Paging Content:\n")
-    pprint.pprint(insar.get_sar_info()['net'])
+    pprint.pprint(insar.get_sar_info()['io'])
 
 def plot_cpu_and_paging(sar_log,out_pdf):
     insar = parser.Parser(sar_log)
