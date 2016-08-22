@@ -37,5 +37,5 @@ def set_include_path():
 
 if __name__ == "__main__":
     set_include_path()
-    main()
-    #plot_cpu_and_paging(sys.argv[1], sys.argv[2])
+    #main()
+    plot_cpu_and_paging(sys.argv[1], sys.argv[2])
